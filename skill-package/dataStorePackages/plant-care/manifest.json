@@ -1,6 +1,6 @@
 {
     "manifest": {
-        "id": "water-care",
+        "id": "plant-care",
         "version": "1.0.0",
         "installStateChanges": "INFORM",
         "presentationDefinitions": [

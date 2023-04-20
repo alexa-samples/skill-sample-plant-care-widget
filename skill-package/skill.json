@@ -6,7 +6,7 @@
           {
             "packages": [
               {
-                "id": "water-care"
+                "id": "plant-care"
               }
             ],
             "type": "ALEXA_DATASTORE_PACKAGEMANAGER"

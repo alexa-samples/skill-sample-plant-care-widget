@@ -1,0 +1,41 @@
+{
+  "interactionModel": {
+      "languageModel": {
+          "invocationName": "water tracker",
+          "intents": [
+              {
+                  "name": "AMAZON.CancelIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.HelpIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.StopIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.NavigateHomeIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.FallbackIntent",
+                  "samples": []
+              },
+              {
+                  "name": "WaterTrackIntent",
+                  "slots": [],
+                  "samples": [
+                      "what's my drink count",
+                      "what's my water count",
+                      "how many glasses of water have I drunk today",
+                      "how much water have I consumed today",
+                      "how much water did I drink today"
+                  ]
+              }
+          ],
+          "types": []
+      }
+  }
+}

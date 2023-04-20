@@ -1,0 +1,61 @@
+{
+  "manifest": {
+    "apis": {
+      "custom": {
+        "interfaces": [
+          {
+            "packages": [
+              {
+                "id": "water-care"
+              }
+            ],
+            "type": "ALEXA_DATASTORE_PACKAGEMANAGER"
+          },
+          {
+            "type": "ALEXA_DATA_STORE"
+          },
+          {
+            "requestedExtensions": [
+              {
+                "uri": "alexaext:datastore:10"
+              }
+            ],
+            "type": "ALEXA_EXTENSION"
+          }
+        ],
+        "locales": {}
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "locales": {
+        "en-US": {}
+      },
+      "shoppingKit": {
+        "isAmazonAssociatesOnAlexaEnabled": false,
+        "isShoppingActionsEnabled": false
+      }
+    },
+    "publishingInformation": {
+      "automaticDistribution": {
+        "isActive": false
+      },
+      "distributionCountries": [],
+      "isAvailableWorldwide": true,
+      "locales": {
+        "en-US": {
+          "description": "Sample Full Description",
+          "examplePhrases": [
+            "Alexa open hello world",
+            "hello",
+            "help"
+          ],
+          "keywords": [],
+          "name": "Water Tracker",
+          "summary": "Sample Short Description"
+        }
+      },
+      "testingInstructions": "Sample Testing Instructions."
+    }
+  }
+}

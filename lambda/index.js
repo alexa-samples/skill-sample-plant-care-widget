@@ -358,6 +358,8 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         InstallWidgetRequestHandler,
         RemoveWidgetRequestHandler,
+        UpdateWidgetRequestHandler,
+        WidgetInstallationErrorHandler,
         WidgetEventHandler,
         LaunchRequestHandler,
         HelpIntentHandler,

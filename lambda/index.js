@@ -44,7 +44,7 @@ const InstallWidgetRequestHandler = {
                 "namespace": "plantCareReminder",
                 "key": "plantData",
                 "content": {
-                    "lastWateredDate": 0
+                    "lastWateredDate": date
                 }
             }
         ]; 

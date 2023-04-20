@@ -214,19 +214,6 @@ const WidgetEventHandler = {
 
         const tokenResponse = await getAccessToken();
         const datastore = await updateDatastore(tokenResponse, commands, target);
-        
-        //  const aplCommands = [{
-        //     type: "SetValue",
-        //     componentId: "maincontainer",
-        //     property: "lastUpdated",
-        //     value: Date.now()
-        // }];
-        
-        //  let aplDirective = {
-        //     type: 'Alexa.Presentation.APL.ExecuteCommands',
-        //     presentationUri: handlerInput.requestEnvelope.request.presentationUri,
-        //     commands: aplCommands
-        // }
 
         return handlerInput.responseBuilder
         .withShouldEndSession(true)

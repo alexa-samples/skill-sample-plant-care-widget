@@ -1,1 +1,21 @@
-{"textWrappingData":{"type":"object","objectId":"textWrappingSample","backgroundImage":{"contentDescription":null,"smallSourceUrl":null,"largeSourceUrl":null,"sources":[{"url":"https://dpbjtbfw03pva.cloudfront.net/images/background-blue.png","size":"large"}]},"title":"Drink Water Reminder","primaryText":"Time to drink water","tertiaryText":"You have drunk","secondaryText":"Stay Hydrated","buttonText":"I drank water!"}}
+{
+    "alexaPhotoData": {
+        "type": "object",
+        "objectId": "alexaPhotoSample",
+        "title": "Plant Care Reminder",
+        "backgroundImage": {
+            "contentDescription": null,
+            "smallSourceUrl": null,
+            "largeSourceUrl": null,
+            "sources": [
+                {
+                    "url": "https://dpbjtbfw03pva.cloudfront.net/images/AlexaPhoto_Image1.png",
+                    "size": "large"
+                }
+            ]
+        },
+        "primaryText": "Haworthia Zebra Plant",
+        "secondaryText": "Water today",
+        "buttonText": "I watered my plant"
+    }
+}

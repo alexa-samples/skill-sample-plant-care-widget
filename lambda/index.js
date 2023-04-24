@@ -92,8 +92,11 @@ const UpdateWidgetRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UpdateRequest";
     },
     async handle(handlerInput) {
+        console.log("From Version" + handlerInput.requestEnvelope.request.fromVersion);
+        console.log("From Version" + handlerInput.requestEnvelope.request.toVersion);
+
         return handlerInput.responseBuilder.getResponse();
-    },
+    }
 };
 
 /* *
@@ -104,12 +107,15 @@ const WidgetInstallationErrorHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.InstallationError";
     },
     async handle(handlerInput) {
+        console.log("Error Type" + handlerInput.requestEnvelope.request.error.type);
+
         let speakOutput = "Sorry, there was an error installing the widget. Please try again later";
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
-    },
+    }
 };
+
 
 /* *
  * Helper function to generate an access token with the scope alexa::datastore. 

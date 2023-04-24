@@ -1,0 +1,31 @@
+{
+    "type": "APL",
+    "version": "2023.1",
+    "license": "Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0\nLicensed under the Amazon Software License  http://aws.amazon.com/asl/",
+    "theme": "dark",
+    "import": [
+        {
+            "name": "alexa-layouts",
+            "version": "1.6.0"
+        }
+    ],
+    "mainTemplate": {
+        "parameters": [
+            "headlineTemplateData"
+        ],
+        "item": [
+            {
+                "type": "AlexaHeadline",
+                "id": "PlantHeadline",
+                "primaryText": "${headlineTemplateData.properties.textContent.primaryText.text}",
+                "headerBackButton": false,
+                "headerAttributionImage": "${headlineTemplateData.properties.logoUrl}",
+                "headerAttributionPrimacy": true,
+                "footerHintText": "${headlineTemplateData.properties.hintText}",
+                "backgroundImageSource": "${headlineTemplateData.properties.backgroundImage.sources[0].url}",
+                "backgroundColorOverlay": false,
+                "speech": "${headlineTemplateData.properties.welcomeSpeech}"
+            }
+        ]
+    }
+}

@@ -1,0 +1,109 @@
+{
+    "type": "APL",
+    "version": "2023.1",
+    "license": "Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0\nLicensed under the Amazon Software License  http://aws.amazon.com/asl/",
+    "theme": "dark",
+    "import": [
+      {
+        "name": "alexa-layouts",
+        "version": "1.6.0"
+      }
+    ],
+    "extensions": [
+      {
+        "name": "DataStore",
+        "uri": "alexaext:datastore:10"
+      }
+    ],
+    "settings": {
+      "DataStore": {
+        "dataBindings": [
+          {
+            "namespace": "plantCareReminder",
+            "key": "plantData",
+            "dataBindingName": "plantData",
+            "dataType": "OBJECT"
+          }
+        ]
+      }
+    },
+    "mainTemplate": {
+      "parameters": [
+        "alexaPhotoData"
+      ],
+      "bind": [
+        {
+          "name": "currentDate",
+          "value": "${Time.format('YYYY-MM-DD', localTime)}",
+          "description": "Sets the current Date in YYYY-MM-DD format."
+        },
+        {
+          "name": "lastWateredDateRemote",
+          "value": "${plantData.lastWateredDate}",
+          "description": "This variable is set to the value that you receive from the datastore."
+        },
+        {
+          "name": "lastWateredDateLocal",
+          "value": "${alexaPhotoData.lastWateredDate || lastWateredDateRemote}",
+          "description": "This variable keeps track of last watered date from database (passed through datasource) and if that's not set, switches to the date from datastore."
+        },
+        {
+          "name": "plantWateredToday",
+          "value": "${currentDate == lastWateredDateRemote || currentDate == lastWateredDateLocal}",
+          "description": "This variable compares the current date to either the lastWaterDateLocal or lastWateredDateRemote variable and sets it to true/false."
+        }
+      ],
+      "items": [
+        {
+          "type": "Container",
+          "width": "100vw",
+          "height": "100vh",
+          "items": [
+            {
+              "type": "AlexaBackground",
+              "backgroundImageSource": "${alexaPhotoData.backgroundImage.sources[0].url}",
+              "backgroundBlur": false
+            },
+            {
+              "type": "AlexaHeader",
+              "headerTitle": "${alexaPhotoData.title}"
+            },
+            {
+              "type": "Container",
+              "grow": 1,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "items": [
+                {
+                  "type": "Text",
+                  "style": "textStyleDisplay5",
+                  "text": "${alexaPhotoData.primaryText}"
+                },
+                {
+                  "type": "Text",
+                  "style": "textStyleDisplay6",
+                  "text": "Last watered: ${lastWateredDateLocal || '-'}"
+                },
+                {
+                  "type": "AlexaButton",
+                  "alignSelf": "center",
+                  "spacing": "@spacingMedium",
+                  "buttonText": "${plantWateredToday ? 'Plant already watered' : alexaPhotoData.buttonText}",
+                  "disabled": "${plantWateredToday}",
+                  "primaryAction": [
+                    {
+                      "type": "SendEvent",
+                      "arguments": [
+                        "plantWateredSkill",
+                        "${currentDate}"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }

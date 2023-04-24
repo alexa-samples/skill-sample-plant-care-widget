@@ -3,6 +3,7 @@
         "id": "plant-care",
         "version": "1.0.0",
         "installStateChanges": "INFORM",
+        "updateStateChanges": "INFORM",
         "presentationDefinitions": [
             {
                 "url": "presentations/default.tpl"

@@ -11,6 +11,10 @@ const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
 const AlexaClientID = "";
 const AlexaClientSecret = "";
 
+
+const launchDocument = require('./documents/launch_template.json');
+const plantCareDocument = require('./documents/water_tracker.json');
+
 /* *
  * UsagesInstalled triggers when a customer installs your widget package on their device
  * Your skill receives this event if your widget manifest has installStateChanges set to INFORM
@@ -18,25 +22,22 @@ const AlexaClientSecret = "";
  * */
 const InstallWidgetRequestHandler = {
     canHandle(handlerInput) {
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UsagesInstalled" ;
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UsagesInstalled";
     },
     async handle(handlerInput) {
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
         const userId = handlerInput.requestEnvelope.context.System.user.userId;
         const instanceId = handlerInput.requestEnvelope.request.payload.usages[0].instanceId;
-        
-        let date = 0; 
-        if(attributes.hasOwnProperty("date")){
-            date = attributes.date; 
-        }
-        
+
+        const date = attributes.date || "";
+
         if (!Array.isArray(attributes.instances) || !attributes.instances.includes(instanceId)) {
-            attributes.instances = [ ...(attributes.instances || []), instanceId];
+            attributes.instances = [...(attributes.instances || []), instanceId];
             attributesManager.setPersistentAttributes(attributes);
             await attributesManager.savePersistentAttributes()
         }
-        
+
         const tokenResponse = await getAccessToken();
         const commands = [
             {
@@ -47,20 +48,16 @@ const InstallWidgetRequestHandler = {
                     "lastWateredDate": date
                 }
             }
-        ]; 
+        ];
 
-        const target =  {
+        const target = {
             "type": "USER",
             "id": userId
-        }; 
+        };
 
-        const dataStoreResponse = await updateDatastore(tokenResponse, commands, target); 
-        const speakOutput = "Installing widget"; 
-        
-        return handlerInput.responseBuilder
-        .speak(speakOutput)
-        .getResponse();
-    },
+        await updateDatastore(tokenResponse, commands, target);
+        return handlerInput.responseBuilder.getResponse();
+    }
 };
 
 /* *
@@ -75,18 +72,15 @@ const RemoveWidgetRequestHandler = {
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
 
-        // Remove the device from the array if the widget has been removed.
-        if(Array.isArray(attributes.instances) || attributes.instances.includes(instanceId)){
-            attributes.instances = attributes.instances.filter(item => item !== instanceId); 
+        // Remove the instance from the array if the widget has been removed.
+        if (Array.isArray(attributes.instances) || attributes.instances.includes(instanceId)) {
+            attributes.instances = attributes.instances.filter(item => item !== instanceId);
             attributesManager.setPersistentAttributes(attributes);
             await attributesManager.savePersistentAttributes();
         }
-        
-        let speakOutput = "Removing widget"; 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .getResponse();
-    },
+
+        return handlerInput.responseBuilder.getResponse();
+    }
 };
 
 /* *
@@ -98,12 +92,7 @@ const UpdateWidgetRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UpdateRequest";
     },
     async handle(handlerInput) {
-       // TODO : add any metrics logic here? 
-
-        let speakOutput = "Updating Widget"; 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .getResponse();
+        return handlerInput.responseBuilder.getResponse();
     },
 };
 
@@ -115,8 +104,7 @@ const WidgetInstallationErrorHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.InstallationError";
     },
     async handle(handlerInput) {
-       
-        let speakOutput = "Sorry, there was an error installing the widget. Please try again later"; 
+        let speakOutput = "Sorry, there was an error installing the widget. Please try again later";
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
@@ -127,72 +115,89 @@ const WidgetInstallationErrorHandler = {
  * Helper function to generate an access token with the scope alexa::datastore. 
  * AlexaClientID and AlexaClientSecret are fetched from the Permissions page
  * */
-function getAccessToken(){
+function getAccessToken() {
     let config = {
-            method: "post",
-            url: "https://api.amazon.com/auth/o2/token",
-            timeout: 3000,
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "charset": "utf-8",
-            },
-            params: {
-                grant_type: "client_credentials",
-                client_id: AlexaClientID,
-                client_secret: AlexaClientSecret,
-                scope: "alexa::datastore"
-            }
-        };
+        method: "post",
+        url: "https://api.amazon.com/auth/o2/token",
+        timeout: 3000,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "charset": "utf-8",
+        },
+        params: {
+            grant_type: "client_credentials",
+            client_id: AlexaClientID,
+            client_secret: AlexaClientSecret,
+            scope: "alexa::datastore"
+        }
+    };
+
     return axios(config)
-    .then(function (response){
-      return response.data;
-    })
-    .catch(function (error){
-      console.log(error)
-    });
+        .then(function (response) {
+            return response.data;
+        })
+        .catch(function (error) {
+            console.log(error)
+        });
 }
 
 /* *
  * Helper function to generate an access token with the scope alexa::datastore. 
  * AlexaClientID and AlexaClientSecret are fetched from the Permissions page
  * */
-async function updateDatastore(token, commands, target){
+async function updateDatastore(token, commands, target) {
     let config = {
-            method: "post",
-            url: `https://api.amazonalexa.com/v1/datastore/commands`,
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `${token.token_type} ${token.access_token}`
-            },
-            data : {
-                "commands": commands,
-                "target": target
-            }
-        };
+        method: "post",
+        url: `https://api.amazonalexa.com/v1/datastore/commands`,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${token.token_type} ${token.access_token}`
+        },
+        data: {
+            "commands": commands,
+            "target": target
+        }
+    };
 
-        axios.request(config)
-        .then((response) => {
-           console.log(JSON.stringify(response.data));
-       })
-       .catch((error) => {
-           console.log(error);
-       });
-
+    return axios(config)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            return response.datal
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
 }
 
-const WidgetEventHandler = {
+const APLEventHandler = {
     canHandle(handlerInput) {
-        // If your widget has more than one button, you'll want to check
-        // the event source ID to determine which button triggered the event.
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.Presentation.APL.UserEvent" ;
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.Presentation.APL.UserEvent";
     },
     async handle(handlerInput) {
-        const date = handlerInput.requestEnvelope.request.arguments[1]; 
-        const userId = handlerInput.requestEnvelope.context.System.user.userId; 
+        const eventType = handlerInput.requestEnvelope.request.arguments[0]; 
+        let shouldEndSession = false; 
+        
+        switch(eventType){
+            case 'openSkill': 
+                // If the user taps on header, launch the skill. 
+                return LaunchRequestHandler.handle(handlerInput);
+            case 'plantWateredWidget': 
+                // If the user taps on the button through widget, set the withShouldEndSession to true. 
+                shouldEndSession = true;
+                break; 
+            case 'plantWateredSkill':
+                // If the user taps on the button through the APL document within skill, the session is not ended and sends a speech response back. 
+                const speakOutput = `The plant has now been watered.`;
+                handlerInput.responseBuilder.speak(speakOutput);
+                break;
+        }
+        
+        const date = handlerInput.requestEnvelope.request.arguments[1];
+        const userId = handlerInput.requestEnvelope.context.System.user.userId;
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
-        
-        attributes.date = date; 
+
+        attributes.date = date;
         attributesManager.setPersistentAttributes(attributes);
         await attributesManager.savePersistentAttributes();
 
@@ -206,32 +211,111 @@ const WidgetEventHandler = {
                 }
             }
         ];
-        
-        const target =  {
+
+        const target = {
             "type": "USER",
             "id": userId
-        }; 
+        };
 
         const tokenResponse = await getAccessToken();
         const datastore = await updateDatastore(tokenResponse, commands, target);
-
         return handlerInput.responseBuilder
-        .withShouldEndSession(true)
-        .getResponse();
+            .withShouldEndSession(shouldEndSession)
+            .getResponse();
     },
 };
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
-        return (Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest' || Alexa.getIntentName(handlerInput.requestEnvelope) === 'WaterTrackIntent') ;
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
-    handle(handlerInput) {
-        //TODO : Send an APL response here
-        const speakOutput = 'Welcome, you can say Hello or Help. Which would you like to try?';
+    async handle(handlerInput) {
+        const speakOutput = 'Welcome to the Plant Care Skill. You can say water my plant to water it or say help to know more. What would you like to do?';
 
+        if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)["Alexa.Presentation.APL"]) {
+            handlerInput.responseBuilder
+                .addDirective({
+                    type: "Alexa.Presentation.APL.RenderDocument",
+                    document: launchDocument,
+                    datasources: {
+                        "headlineTemplateData": {
+                            "type": "object",
+                            "objectId": "headlineSample",
+                            "properties": {
+                                "backgroundImage": {
+                                    "contentDescription": null,
+                                    "smallSourceUrl": null,
+                                    "largeSourceUrl": null,
+                                    "sources": [
+                                        {
+                                            "url": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/headline/HeadlineBackground_Dark.png",
+                                            "size": "large"
+                                        }
+                                    ]
+                                },
+                                "textContent": {
+                                    "primaryText": {
+                                        "type": "PlainText",
+                                        "text": "Welcome to The Plant Care Skill"
+                                    }
+                                },
+                                "logoUrl": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/logo/logo-modern-botanical-white.png",
+                                "hintText": "Try, \"Alexa, water my plant\""
+                            }
+                        }
+                    }
+                }
+                )
+        }
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const PlantCareIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getIntentName(handlerInput.requestEnvelope) === 'PlantCareIntent';
+    },
+    async handle(handlerInput) {
+        const { attributesManager } = handlerInput;
+        const attributes = await attributesManager.getPersistentAttributes() || {};
+        const date = attributes.date || "";
+        
+        let speakOutput = 'Tap on the button to water your plant.';
+
+        if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)["Alexa.Presentation.APL"]) {
+            handlerInput.responseBuilder
+                .addDirective({
+                    type: "Alexa.Presentation.APL.RenderDocument",
+                    document: plantCareDocument,
+                    datasources: {
+                        "alexaPhotoData": {
+                            "title": "Plant Care Reminder",
+                            "backgroundImage": {
+                                "contentDescription": null,
+                                "smallSourceUrl": null,
+                                "largeSourceUrl": null,
+                                "sources": [
+                                    {
+                                        "url": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/long_text/LongTextSampleBackground_Dark.png",
+                                        "size": "large"
+                                    }
+                                ]
+                            },
+                            "lastWateredDate": date,
+                            "primaryText": "Haworthia Zebra Plant",
+                            "secondaryText": "Water today",
+                            "buttonText": "I watered my plant"
+                        }
+                    }
+                }
+                )
+        }
+        
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
             .getResponse();
     }
 };
@@ -242,7 +326,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'You can say hello to me! How can I help?';
+        const speakOutput = 'The Plant Care Skill lets you keep track of if and when you watered your plant. You can say water my plant to water it.';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -360,8 +444,9 @@ exports.handler = Alexa.SkillBuilders.custom()
         RemoveWidgetRequestHandler,
         UpdateWidgetRequestHandler,
         WidgetInstallationErrorHandler,
-        WidgetEventHandler,
+        APLEventHandler,
         LaunchRequestHandler,
+        PlantCareIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         FallbackIntentHandler,
@@ -374,7 +459,7 @@ exports.handler = Alexa.SkillBuilders.custom()
         new ddbAdapter.DynamoDbPersistenceAdapter({
             tableName: process.env.DYNAMODB_PERSISTENCE_TABLE_NAME,
             createTable: false,
-            dynamoDBClient: new AWS.DynamoDB({apiVersion: 'latest', region: process.env.DYNAMODB_PERSISTENCE_REGION})
+            dynamoDBClient: new AWS.DynamoDB({ apiVersion: 'latest', region: process.env.DYNAMODB_PERSISTENCE_REGION })
         })
     )
     .addRequestInterceptors(LoggingRequestInterceptor)

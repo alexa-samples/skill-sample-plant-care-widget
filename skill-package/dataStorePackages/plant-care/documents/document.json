@@ -28,24 +28,28 @@
     },
     "mainTemplate": {
         "parameters": [
-            "payload"
+            "alexaPhotoData"
         ],
         "bind": [
             {
                 "name": "currentDate",
-                "value": "${Time.format('YYYY-MM-DD', localTime)}"
+                "value": "${Time.format('YYYY-MM-DD', localTime)}",
+                "description": "Sets the current Date in YYYY-MM-DD format."
             },
             {
                 "name": "lastWateredDateRemote",
-                "value": "${plantData.lastWateredDate}"
+                "value": "${plantData.lastWateredDate}",
+                "description": "This variable is set to the value of the lastWateredDate key from Datastore."
             },
             {
                 "name": "lastWateredDateLocal",
-                "value": "${lastWateredDateRemote}"
+                "value": "${lastWateredDateRemote}",
+                "description": "This variable is set to lastWateredDateRemote and when the user taps the button, we update it to the currentDate."
             },
             {
                 "name": "plantWateredToday",
-                "value": "${currentDate == lastWateredDateRemote || currentDate == lastWateredDateLocal}"
+                "value": "${currentDate == lastWateredDateRemote || currentDate == lastWateredDateLocal}",
+                "description": "This variable compares the current date to either the lastWaterDateLocal or lastWateredDateRemote variable and sets it to true/false."
             }
         ],
         "items": [
@@ -64,7 +68,7 @@
                             {
                                 "type": "AlexaImage",
                                 "imageRoundedCorner": false,
-                                "imageSource": "${payload.alexaPhotoData.backgroundImage.sources[0].url}",
+                                "imageSource": "${alexaPhotoData.backgroundImage.sources[0].url}",
                                 "imageWidth": "100%",
                                 "imageHeight": "100%",
                                 "imageScale": "best-fill"
@@ -78,17 +82,22 @@
                                 "scale": "fill"
                             },
                             {
-                                "type": "AlexaHeader",
+                                "type": "TouchWrapper",
                                 "position": "absolute",
-                                "headerTitle": "${payload.alexaPhotoData.title}",
-                                "primaryAction": [
+                                "id": "openSkill",
+                                "item": {
+                                    "type": "AlexaHeader",
+                                    "position": "absolute",
+                                    "headerTitle": "${alexaPhotoData.title}"
+                                },
+                                "onPress": [
                                     {
                                         "type": "SendEvent",
                                         "arguments": [
                                             "openSkill"
                                         ],
                                         "flags": {
-                                            "interactionMode": "INLINE"
+                                            "interactionMode": "STANDARD"
                                         }
                                     }
                                 ]
@@ -100,12 +109,12 @@
                                 "items": [
                                     {
                                         "type": "AlexaPhotoCaption",
-                                        "primaryText": "${payload.alexaPhotoData.primaryText}",
+                                        "primaryText": "${alexaPhotoData.primaryText}",
                                         "secondaryText": "Last watered: ${lastWateredDateLocal || '-'}"
                                     },
                                     {
                                         "type": "AlexaFooterActionButton",
-                                        "buttonText": "${plantWateredToday ? 'Plant already watered' : payload.alexaPhotoData.buttonText}",
+                                        "buttonText": "${plantWateredToday ? 'Plant already watered' : alexaPhotoData.buttonText}",
                                         "disabled": "${plantWateredToday}",
                                         "primaryAction": [
                                             {
@@ -117,7 +126,7 @@
                                             {
                                                 "type": "SendEvent",
                                                 "arguments": [
-                                                    "plantWatered",
+                                                    "plantWateredWidget",
                                                     "${currentDate}"
                                                 ],
                                                 "flags": {

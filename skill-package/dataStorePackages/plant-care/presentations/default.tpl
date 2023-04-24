@@ -1,1 +1,5 @@
-{    "type" : "APL_PRESENTATION",    "documentUrl": "documents/document.json",    "datasourceUrl": "datasources/default.json"}
+{
+  "type": "APL_PRESENTATION",
+  "documentUrl": "documents/document.json",
+  "datasourceUrl": "datasources/default.json"
+}

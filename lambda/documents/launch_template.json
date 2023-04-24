@@ -23,8 +23,7 @@
                 "headerAttributionPrimacy": true,
                 "footerHintText": "${headlineTemplateData.properties.hintText}",
                 "backgroundImageSource": "${headlineTemplateData.properties.backgroundImage.sources[0].url}",
-                "backgroundColorOverlay": false,
-                "speech": "${headlineTemplateData.properties.welcomeSpeech}"
+                "backgroundColorOverlay": false
             }
         ]
     }

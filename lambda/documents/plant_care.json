@@ -34,23 +34,19 @@
       "bind": [
         {
           "name": "currentDate",
-          "value": "${Time.format('YYYY-MM-DD', localTime)}",
-          "description": "Sets the current Date in YYYY-MM-DD format."
+          "value": "${Time.format('YYYY-MM-DD', localTime)}"
         },
         {
           "name": "lastWateredDateRemote",
-          "value": "${plantData.lastWateredDate}",
-          "description": "This variable is set to the value that you receive from the datastore."
+          "value": "${plantData.lastWateredDate}"
         },
         {
           "name": "lastWateredDateLocal",
-          "value": "${alexaPhotoData.lastWateredDate || lastWateredDateRemote}",
-          "description": "This variable keeps track of last watered date from database (passed through datasource) and if that's not set, switches to the date from datastore."
+          "value": "${alexaPhotoData.lastWateredDate || lastWateredDateRemote}"
         },
         {
           "name": "plantWateredToday",
-          "value": "${currentDate == lastWateredDateRemote || currentDate == lastWateredDateLocal}",
-          "description": "This variable compares the current date to either the lastWaterDateLocal or lastWateredDateRemote variable and sets it to true/false."
+          "value": "${currentDate == lastWateredDateRemote || currentDate == lastWateredDateLocal}"
         }
       ],
       "items": [

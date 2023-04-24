@@ -15,6 +15,91 @@
             "type": "ALEXA_DATA_STORE"
           },
           {
+            "supportedViewports": [
+              {
+                "maxHeight": 540,
+                "maxWidth": 960,
+                "minHeight": 540,
+                "minWidth": 960,
+                "mode": "TV",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 599,
+                "maxWidth": 599,
+                "minHeight": 100,
+                "minWidth": 100,
+                "mode": "HUB",
+                "shape": "ROUND"
+              },
+              {
+                "maxHeight": 959,
+                "maxWidth": 1279,
+                "minHeight": 600,
+                "minWidth": 960,
+                "mode": "HUB",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 1279,
+                "maxWidth": 1920,
+                "minHeight": 600,
+                "minWidth": 1280,
+                "mode": "HUB",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 599,
+                "maxWidth": 1279,
+                "minHeight": 100,
+                "minWidth": 960,
+                "mode": "HUB",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 1279,
+                "maxWidth": 2560,
+                "minHeight": 960,
+                "minWidth": 1920,
+                "mode": "HUB",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 2560,
+                "maxWidth": 1279,
+                "minHeight": 1920,
+                "minWidth": 960,
+                "mode": "HUB",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 1920,
+                "maxWidth": 959,
+                "minHeight": 320,
+                "minWidth": 600,
+                "mode": "MOBILE",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 1920,
+                "maxWidth": 1279,
+                "minHeight": 320,
+                "minWidth": 960,
+                "mode": "MOBILE",
+                "shape": "RECTANGLE"
+              },
+              {
+                "maxHeight": 1920,
+                "maxWidth": 1920,
+                "minHeight": 320,
+                "minWidth": 1280,
+                "mode": "MOBILE",
+                "shape": "RECTANGLE"
+              }
+            ],
+            "type": "ALEXA_PRESENTATION_APL"
+          },
+          {
             "requestedExtensions": [
               {
                 "uri": "alexaext:datastore:10"
@@ -30,10 +115,6 @@
     "privacyAndCompliance": {
       "locales": {
         "en-US": {}
-      },
-      "shoppingKit": {
-        "isAmazonAssociatesOnAlexaEnabled": false,
-        "isShoppingActionsEnabled": false
       }
     },
     "publishingInformation": {
@@ -44,15 +125,15 @@
       "isAvailableWorldwide": true,
       "locales": {
         "en-US": {
-          "description": "Sample Full Description",
+          "description": "Keep a track of when your plant was last watered.",
           "examplePhrases": [
-            "Alexa open hello world",
-            "hello",
-            "help"
+            "Alexa, open plant care",
+            "did I water my plant?",
+            "water my plant"
           ],
           "keywords": [],
-          "name": "Water Tracker",
-          "summary": "Sample Short Description"
+          "name": "Plant Care",
+          "summary": "Keep a track of when your plant was last watered."
         }
       },
       "testingInstructions": "Sample Testing Instructions."

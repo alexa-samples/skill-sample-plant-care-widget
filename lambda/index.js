@@ -13,7 +13,7 @@ const AlexaClientSecret = "";
 
 
 const launchDocument = require('./documents/launch_template.json');
-const plantCareDocument = require('./documents/water_tracker.json');
+const plantCareDocument = require('./documents/plant_care.json');
 
 /* *
  * UsagesInstalled triggers when a customer installs your widget package on their device
@@ -249,9 +249,6 @@ const LaunchRequestHandler = {
                             "objectId": "headlineSample",
                             "properties": {
                                 "backgroundImage": {
-                                    "contentDescription": null,
-                                    "smallSourceUrl": null,
-                                    "largeSourceUrl": null,
                                     "sources": [
                                         {
                                             "url": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/headline/HeadlineBackground_Dark.png",

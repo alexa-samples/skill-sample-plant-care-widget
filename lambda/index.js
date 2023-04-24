@@ -16,63 +16,76 @@ const launchDocument = require('./documents/launch_template.json');
 const plantCareDocument = require('./documents/plant_care.json');
 
 /* *
- * UsagesInstalled triggers when a customer installs your widget package on their device
+ * UsagesInstalled triggers when a user installs your widget package on their device
  * Your skill receives this event if your widget manifest has installStateChanges set to INFORM
- * For every widget that the customer installs, you will receive an unique instance ID in instanceId property.  
+ * For every widget that the user installs, you will receive an unique instance ID in instanceId property.  
  * */
 const InstallWidgetRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UsagesInstalled";
     },
     async handle(handlerInput) {
+        // read user profile information with last known watered date from DynamoDB (if exists)
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
-        const userId = handlerInput.requestEnvelope.context.System.user.userId;
+        
+        /* write last known watered date to local DataStore of the Alexa device this 
+        widget just got installed on. It lets the newly installed widget show the latest 
+        known watered date for this user */
+        const commands = [
+            {
+                type: "PUT_OBJECT",
+                namespace: "plantCareReminder",
+                key: "plantData",
+                content: {
+                    lastWateredDate: attributes.date || ""
+                }
+            }
+        ];
+        /* to push an update to the device's DataStore we first need to obtain an 
+        access token from Alexa service */
+        const tokenResponse = await getAccessToken();
+        
+        /* we target all devices of the current user so that all their Plant Care 
+        widgets will receive the last watered date */
+        const target = {
+            type: "USER",
+            id: handlerInput.requestEnvelope.context.System.user.userId
+        };
+
+        // push update to DataStore service which will distribute the update to all targeted devices
+        await updateDatastore(tokenResponse, commands, target);
+
+        /* Optional: track the widget instance id for a user in their profile data to know 
+        how many widget instances they are running on their devices. You can use this information
+        e.g. to promote installing the widget to a user who's known to not yet have any widget
+        instances running on any of their devices. */
         const instanceId = handlerInput.requestEnvelope.request.payload.usages[0].instanceId;
-
-        const date = attributes.date || "";
-
+        /* please note that only the widget instance id represents a single widget installation.
+        A user can install and run the Plant Care widget multiple times on a single device */
         if (!Array.isArray(attributes.instances) || !attributes.instances.includes(instanceId)) {
             attributes.instances = [...(attributes.instances || []), instanceId];
             attributesManager.setPersistentAttributes(attributes);
             await attributesManager.savePersistentAttributes()
         }
 
-        const tokenResponse = await getAccessToken();
-        const commands = [
-            {
-                "type": "PUT_OBJECT",
-                "namespace": "plantCareReminder",
-                "key": "plantData",
-                "content": {
-                    "lastWateredDate": date
-                }
-            }
-        ];
-
-        const target = {
-            "type": "USER",
-            "id": userId
-        };
-
-        await updateDatastore(tokenResponse, commands, target);
         return handlerInput.responseBuilder.getResponse();
     }
 };
 
 /* *
- * UsagesRemoved triggers when a customer removes your widget package on their device.  
+ * UsagesRemoved triggers when a user removes your widget package on their device.  
  * */
 const RemoveWidgetRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UsagesRemoved";
     },
     async handle(handlerInput) {
-        let instanceId = handlerInput.requestEnvelope.request.payload.usages[0].instanceId;
+        const instanceId = handlerInput.requestEnvelope.request.payload.usages[0].instanceId;
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
 
-        // Remove the instance from the array if the widget has been removed.
+        // Remove the instance from the array when the widget has been removed.
         if (Array.isArray(attributes.instances) || attributes.instances.includes(instanceId)) {
             attributes.instances = attributes.instances.filter(item => item !== instanceId);
             attributesManager.setPersistentAttributes(attributes);
@@ -84,7 +97,7 @@ const RemoveWidgetRequestHandler = {
 };
 
 /* *
- * UpdateRequest triggers when a customer receives an widget update on their device
+ * UpdateRequest triggers when a user receives an widget update on their device
  * Your skill receives this event if your widget manifest has updateStateChanges set to INFORM  
  * */
 const UpdateWidgetRequestHandler = {
@@ -92,6 +105,8 @@ const UpdateWidgetRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.UpdateRequest";
     },
     async handle(handlerInput) {
+        /* for now this information is not needed by this sample skill. 
+        Optional: it will be logged for tracking purposes. */
         console.log("From Version" + handlerInput.requestEnvelope.request.fromVersion);
         console.log("From Version" + handlerInput.requestEnvelope.request.toVersion);
 
@@ -107,9 +122,9 @@ const WidgetInstallationErrorHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.DataStore.PackageManager.InstallationError";
     },
     async handle(handlerInput) {
-        console.log("Error Type" + handlerInput.requestEnvelope.request.error.type);
+        console.log("Error Type: " + handlerInput.requestEnvelope.request.error.type);
 
-        let speakOutput = "Sorry, there was an error installing the widget. Please try again later";
+        const speakOutput = "Sorry, there was an error installing the widget. Please try again later";
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
@@ -128,7 +143,7 @@ function getAccessToken() {
         timeout: 3000,
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "charset": "utf-8",
+            charset: "utf-8",
         },
         params: {
             grant_type: "client_credentials",
@@ -152,16 +167,16 @@ function getAccessToken() {
  * AlexaClientID and AlexaClientSecret are fetched from the Permissions page
  * */
 async function updateDatastore(token, commands, target) {
-    let config = {
+    const config = {
         method: "post",
         url: `https://api.amazonalexa.com/v1/datastore/commands`,
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `${token.token_type} ${token.access_token}`
+            Authorization: `${token.token_type} ${token.access_token}`
         },
         data: {
-            "commands": commands,
-            "target": target
+            commands: commands,
+            target: target
         }
     };
 
@@ -175,11 +190,18 @@ async function updateDatastore(token, commands, target) {
         });
 }
 
+/* *
+ * Handler to process any incoming APL UserEvent that originates from a SendEvent command
+ * from within the Plant Care widget or the Plant Care skill APL experience
+ * */
 const APLEventHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === "Alexa.Presentation.APL.UserEvent";
     },
     async handle(handlerInput) {
+        /* obtain the first argument that is handed in by the SendEvent 
+        command of an APL document. It is supposed to indicate the type of 
+        user action e.g. a button that was tapped */
         const eventType = handlerInput.requestEnvelope.request.arguments[0]; 
         let shouldEndSession = false; 
         
@@ -198,33 +220,36 @@ const APLEventHandler = {
                 break;
         }
         
+        // get last watered plant date as handed in by the skill
         const date = handlerInput.requestEnvelope.request.arguments[1];
         const userId = handlerInput.requestEnvelope.context.System.user.userId;
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
 
+        // write last watered date to user profile in DynamoDB
         attributes.date = date;
         attributesManager.setPersistentAttributes(attributes);
         await attributesManager.savePersistentAttributes();
 
+        // propagate update to DataStore to send it down to all the devices of a user to reflect in their widgets
         const commands = [
             {
-                "type": "PUT_OBJECT",
-                "namespace": "plantCareReminder",
-                "key": "plantData",
-                "content": {
-                    "lastWateredDate": date
+                type: "PUT_OBJECT",
+                namespace: "plantCareReminder",
+                key: "plantData",
+                content: {
+                    lastWateredDate: date
                 }
             }
         ];
 
         const target = {
-            "type": "USER",
-            "id": userId
+            type: "USER",
+            id: userId
         };
 
         const tokenResponse = await getAccessToken();
-        const datastore = await updateDatastore(tokenResponse, commands, target);
+        await updateDatastore(tokenResponse, commands, target);
         return handlerInput.responseBuilder
             .withShouldEndSession(shouldEndSession)
             .getResponse();
@@ -244,26 +269,29 @@ const LaunchRequestHandler = {
                     type: "Alexa.Presentation.APL.RenderDocument",
                     document: launchDocument,
                     datasources: {
-                        "headlineTemplateData": {
-                            "type": "object",
-                            "objectId": "headlineSample",
-                            "properties": {
-                                "backgroundImage": {
-                                    "sources": [
+                        headlineTemplateData: {
+                            type: "object",
+                            objectId: "headlineSample",
+                            properties: {
+                                backgroundImage: {
+                                    contentDescription: null,
+                                    smallSourceUrl: null,
+                                    largeSourceUrl: null,
+                                    sources: [
                                         {
-                                            "url": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/headline/HeadlineBackground_Dark.png",
-                                            "size": "large"
+                                            url: "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/headline/HeadlineBackground_Dark.png",
+                                            size: "large"
                                         }
                                     ]
                                 },
-                                "textContent": {
-                                    "primaryText": {
-                                        "type": "PlainText",
-                                        "text": "Welcome to The Plant Care Skill"
+                                textContent: {
+                                    primaryText: {
+                                        type: "PlainText",
+                                        text: "Welcome to The Plant Care Skill"
                                     }
                                 },
-                                "logoUrl": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/logo/logo-modern-botanical-white.png",
-                                "hintText": "Try, \"Alexa, water my plant\""
+                                logoUrl: "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/logo/logo-modern-botanical-white.png",
+                                hintText: "Try, \"Alexa, water my plant\""
                             }
                         }
                     }
@@ -284,39 +312,34 @@ const PlantCareIntentHandler = {
     async handle(handlerInput) {
         const { attributesManager } = handlerInput;
         const attributes = await attributesManager.getPersistentAttributes() || {};
-        const date = attributes.date || "";
         
-        let speakOutput = 'Tap on the button to water your plant.';
-
         if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)["Alexa.Presentation.APL"]) {
             handlerInput.responseBuilder
                 .addDirective({
                     type: "Alexa.Presentation.APL.RenderDocument",
                     document: plantCareDocument,
                     datasources: {
-                        "alexaPhotoData": {
-                            "title": "Plant Care Reminder",
-                            "backgroundImage": {
-                                "contentDescription": null,
-                                "smallSourceUrl": null,
-                                "largeSourceUrl": null,
-                                "sources": [
+                        alexaPhotoData: {
+                            title: "Plant Care Reminder",
+                            backgroundImage: {
+                                sources: [
                                     {
-                                        "url": "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/long_text/LongTextSampleBackground_Dark.png",
-                                        "size": "large"
+                                        url: "https://d2o906d8ln7ui1.cloudfront.net/images/templates_v3/long_text/LongTextSampleBackground_Dark.png",
+                                        size: "large"
                                     }
                                 ]
                             },
-                            "lastWateredDate": date,
-                            "primaryText": "Haworthia Zebra Plant",
-                            "secondaryText": "Water today",
-                            "buttonText": "I watered my plant"
+                            lastWateredDate: attributes.date || "",
+                            primaryText: "Haworthia Zebra Plant",
+                            secondaryText: "Water today",
+                            buttonText: "I watered my plant"
                         }
                     }
                 }
                 )
         }
         
+        const speakOutput = 'Tap on the button to water your plant.';
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
@@ -354,7 +377,7 @@ const CancelAndStopIntentHandler = {
 };
 
 /* *
- * FallbackIntent triggers when a customer says something that doesn’t map to any intents in your skill
+ * FallbackIntent triggers when a user says something that doesn’t map to any intents in your skill
  * It must also be defined in the language model (if the locale supports it)
  * This handler can be safely added but will be ingnored in locales that do not support it yet 
  * */

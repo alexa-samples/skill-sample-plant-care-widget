@@ -7,7 +7,7 @@ This Alexa sample skill is a template for a basic Alexa Widget. The Plant Care w
 ### Repository Contents	 
 * `/lambda` - Back-End Logic for the Alexa Skill hosted on [AWS Lambda](https://aws.amazon.com/lambda/)
 * `/skill-package` - Voice User Interface and Language Specific Interaction Models
-* `/skill-package/dataStorePackages/water-care` - [APL Package for Water Care Widget](https://developer.amazon.com/en-US/docs/alexa/alexa-presentation-language/apl-widgets-reference.html#apl-package) 
+* `/skill-package/dataStorePackages/plant-care` - [APL Package for Plant Care Widget](https://developer.amazon.com/en-US/docs/alexa/alexa-presentation-language/apl-widgets-reference.html#apl-package) 
 
 ## Additional Resources
 

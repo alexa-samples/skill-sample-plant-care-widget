@@ -108,7 +108,7 @@ const UpdateWidgetRequestHandler = {
         /* for now this information is not needed by this sample skill. 
         Optional: it will be logged for tracking purposes. */
         console.log("From Version" + handlerInput.requestEnvelope.request.fromVersion);
-        console.log("From Version" + handlerInput.requestEnvelope.request.toVersion);
+        console.log("To Version" + handlerInput.requestEnvelope.request.toVersion);
 
         return handlerInput.responseBuilder.getResponse();
     }
